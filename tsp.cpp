@@ -36,13 +36,16 @@ int attDistance(City i, City j) {
     return distance;
 }
 
+int getClosestCity(int city) {
+    
+}
+
 int main() {
     int distanceType;
     string line;
     for (int i=0; i<6; i++) {
         getline(cin, line);
         if (i == 4) {
-            debug(line);
             if (line.find("ATT") != string::npos) {
                 distanceType = ATT;
             } else {
@@ -50,7 +53,37 @@ int main() {
             }
         }
     }
-    debug(distanceType);
+
+    int count = 0;
+    while(getline(cin, line)) {
+        if (line == "EOF") continue;
+        
+        count++;
+        int c =  atoi(strtok(&line[0], " "));
+        int x =  atoi(strtok(NULL, " "));
+        int y =  atoi(strtok(NULL, " "));
+
+        City city = City(x,y);
+        cities.push_back(&city);
+    }
+
+    int currentCity = rand() % count;
+    int cost = 0;
+
+    for (int i=0; i<count-1; i++) {
+        cities[currentCity]->visited = true;
+        int nextCity = getClosestCity(currentCity);
+        int distance;
+        
+        if (distanceType == ATT) distance = attDistance(*cities[currentCity], *cities[nextCity]);
+        else distance = eucliDistance(*cities[currentCity], *cities[nextCity]);
+        
+        cost += distance;
+        currentCity = nextCity;
+    }
+    
+    debug(cost);
+
     return 0;
     
 }
