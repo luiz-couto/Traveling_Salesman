@@ -8,10 +8,12 @@ using namespace std;
 struct City {
     int x;
     int y;
+    int index;
     bool visited;
-    City(int x, int y) {
+    City(int x, int y, int index) {
         this->x = x;
         this->y = y;
+        this->index = index;
         this->visited = false;
     }
 };
