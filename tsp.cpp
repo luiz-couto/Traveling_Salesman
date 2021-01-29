@@ -48,7 +48,6 @@ int getClosestCity(int currCity) {
         if (distanceType == ATT) distance = attDistance(cities[currCity], city);
         else distance = eucliDistance(cities[currCity], city);
 
-        
         if (distance < minDist) {
             cityInd = city->index;
             minDist = distance;
@@ -59,6 +58,8 @@ int getClosestCity(int currCity) {
 }
 
 int main() {
+    auto start = std::chrono::high_resolution_clock::now();
+
     string line;
     for (int i=0; i<6; i++) {
         getline(cin, line);
@@ -70,25 +71,28 @@ int main() {
             }
         }
     }
-
+    
     int count = 0;
     while(getline(cin, line)) {
-        if (line == "EOF") continue;
-        
+        if (line == "EOF") break;
+
         count++;
-        int c =  atoi(strtok(&line[0], " "));
-        int x =  atoi(strtok(NULL, " "));
-        int y =  atoi(strtok(NULL, " "));
+        int c = atoi(strtok(&line[0], " "));
+        int x = atoi(strtok(NULL, " "));
+        int y = atoi(strtok(NULL, " "));
 
         City *city = new City(x,y,count-1);
         cities.push_back(city);
     }
+   
 
     srand(time(NULL));
     int currentCity = rand() % count;
+    int first = currentCity;
     int cost = 0;
 
     for (int i=0; i<count-1; i++) {
+
         cities[currentCity]->visited = true;
         
         int nextCity = getClosestCity(currentCity);
@@ -100,8 +104,18 @@ int main() {
         cost += distance;
         currentCity = nextCity;
     }
-    
-    debug(cost);
+
+    int lastDistance;
+    if (distanceType == ATT) lastDistance = attDistance(cities[currentCity], cities[first]);
+    else lastDistance = eucliDistance(cities[currentCity], cities[first]);
+
+    cost += lastDistance;
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+
+    cout << "Total Cost: " << cost << endl;
+    cout << "Elapsed time: " << elapsed.count() << " ms\n";
 
     return 0;
 }
