@@ -5,6 +5,12 @@
 
 using namespace std;
 
+struct TSP {
+    vector<int> tour;
+    int bestCost;
+    int bestTime;
+};
+
 struct City {
     int x;
     int y;

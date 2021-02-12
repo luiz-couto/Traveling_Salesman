@@ -57,8 +57,25 @@ int getClosestCity(int currCity) {
     return cityInd;
 }
 
-int main() {
-    auto start = std::chrono::high_resolution_clock::now();
+int getDistance(City *a, City *b) {
+    int distance;
+    if (distanceType == ATT) distance = attDistance(a, b);
+    else distance = eucliDistance(a, b);
+    return distance;
+}
+
+int getTotalCost(vector<int> tour) {
+    int total = 0;
+    for (int i=0; i<tour.size()-1; i++) {
+        int distance = getDistance(cities[tour[i]], cities[tour[i+1]]);
+        total = total + distance;
+    }
+    total = total + getDistance(cities[tour[0]], cities[tour[tour.size()-1]]);
+    return total;
+}
+
+void runGreddy(TSP* tsp) {
+    
 
     string line;
     for (int i=0; i<6; i++) {
@@ -84,12 +101,13 @@ int main() {
         City *city = new City(x,y,count-1);
         cities.push_back(city);
     }
-   
 
     srand(time(NULL));
     int currentCity = rand() % count;
     int first = currentCity;
     int cost = 0;
+
+    tsp->tour.push_back(currentCity);
 
     for (int i=0; i<count-1; i++) {
 
@@ -97,6 +115,8 @@ int main() {
         
         int nextCity = getClosestCity(currentCity);
         int distance;
+
+        tsp->tour.push_back(nextCity);
 
         if (distanceType == ATT) distance = attDistance(cities[currentCity], cities[nextCity]);
         else distance = eucliDistance(cities[currentCity], cities[nextCity]);
@@ -111,11 +131,46 @@ int main() {
 
     cost += lastDistance;
 
+    tsp->bestCost = cost;
+
+}
+
+void runOPT(TSP *tsp) {
+    runGreddy(tsp);
+    int size = tsp->tour.size();
+    vector<int> bestTour = tsp->tour;
+
+    for (int i=1; i<size-2; i++) {
+        for (int j=i+1; j<size; j++) {
+            if (j-1 == 1) {
+                continue;
+            }
+
+            vector<int> newTour(bestTour);
+
+            for (int k=0; (k+i)<j; k++) {
+                newTour[k+i] = bestTour[j-k-1];
+            }
+
+            if (getTotalCost(newTour) < tsp->bestCost) {
+                tsp->tour = newTour;
+                tsp->bestCost = getTotalCost(newTour);
+            }
+        }
+    }
+}
+
+int main() {
+    auto start = std::chrono::high_resolution_clock::now();
+
+    TSP *tsp = new TSP();
+    runOPT(tsp);
+
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
 
-    cout << "Total Cost: " << cost << endl;
-    cout << "Elapsed time: " << elapsed.count() << " ms\n";
-
+    debug(tsp->bestCost);
+    debug(elapsed.count());
+    
     return 0;
 }
