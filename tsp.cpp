@@ -74,33 +74,51 @@ int getTotalCost(vector<int> tour) {
     return total;
 }
 
-void runGreddy(TSP* tsp) {
-    
+int getRandomLRC(int currCity) {
+    double alpha = 0.01;
+    int greaterDis = 0;
+    int smallestDis = 1000000;
 
-    string line;
-    for (int i=0; i<6; i++) {
-        getline(cin, line);
-        if (i == 4) {
-            if (line.find("ATT") != string::npos) {
-                distanceType = ATT;
-            } else {
-                distanceType = EUC_2D;
-            }
+    int grtCity, smallCity;
+
+    for (City* city : cities) {
+        if (city->visited == true || city->index == currCity) continue;
+
+        int distance = getDistance(cities[currCity], city);
+
+        if (distance < smallestDis) {
+            smallCity = city->index;
+            smallestDis = distance;
         }
-    }
-    
-    int count = 0;
-    while(getline(cin, line)) {
-        if (line == "EOF") break;
 
-        count++;
-        int c = atoi(strtok(&line[0], " "));
-        int x = atoi(strtok(NULL, " "));
-        int y = atoi(strtok(NULL, " "));
+        if (distance > greaterDis) {
+            grtCity = city->index;
+            greaterDis = distance;
+        }
 
-        City *city = new City(x,y,count-1);
-        cities.push_back(city);
     }
+
+    double limit = double(smallestDis) + (alpha*(double(greaterDis) - double(smallestDis)));
+
+    vector<int> lrc;
+
+    for (City* city : cities) {
+        if (city->visited == true || city->index == currCity) continue;
+        int distance = getDistance(cities[currCity], city);
+
+        if (double(distance) <= limit) {
+            lrc.push_back(city->index);
+        }
+
+    }
+
+    srand(time(NULL)+time(NULL)*currCity);
+    int selectedPos = rand() % lrc.size();
+
+    return lrc[selectedPos];
+} 
+
+void runGreddy(TSP* tsp, int count) {
 
     srand(time(NULL));
     int currentCity = rand() % count;
@@ -113,7 +131,7 @@ void runGreddy(TSP* tsp) {
 
         cities[currentCity]->visited = true;
         
-        int nextCity = getClosestCity(currentCity);
+        int nextCity = getRandomLRC(currentCity);
         int distance;
 
         tsp->tour.push_back(nextCity);
@@ -135,8 +153,8 @@ void runGreddy(TSP* tsp) {
 
 }
 
-void runOPT(TSP *tsp) {
-    runGreddy(tsp);
+void runOPT(TSP *tsp, int count) {
+    runGreddy(tsp, count);
     int size = tsp->tour.size();
     vector<int> bestTour = tsp->tour;
 
@@ -164,7 +182,38 @@ int main() {
     auto start = std::chrono::high_resolution_clock::now();
 
     TSP *tsp = new TSP();
-    runOPT(tsp);
+
+    string line;
+    for (int i=0; i<6; i++) {
+        getline(cin, line);
+        if (i == 4) {
+            if (line.find("ATT") != string::npos) {
+                distanceType = ATT;
+            } else {
+                distanceType = EUC_2D;
+            }
+        }
+    }
+
+    int count = 0;
+    while(getline(cin, line)) {
+        if (line == "EOF") break;
+
+        count++;
+        int c = atoi(strtok(&line[0], " "));
+        int x = atoi(strtok(NULL, " "));
+        int y = atoi(strtok(NULL, " "));
+
+        City *city = new City(x,y,count-1);
+        cities.push_back(city);
+    }
+
+    for (int i=0; i<10; i++) {
+        runOPT(tsp, count);
+        for (City* city : cities) {
+          city->visited = false;
+        } 
+    }
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
